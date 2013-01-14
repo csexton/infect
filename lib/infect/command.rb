@@ -1,3 +1,6 @@
+require 'open-uri'
+require 'fileutils'
+
 module Infect
   class Command
     def self.build(command, args)
@@ -5,7 +8,7 @@ module Infect
       when :bundle
         Bundle.new(args)
       else
-        puts "WARNING: #{command} is not a valid command, ignorning"
+        $stderr.puts "WARNING: #{command} is not a valid command, ignorning"
       end
     end
 
@@ -29,10 +32,6 @@ module Infect
     def colorize(code, str)
       "\e[#{code}m#{str}\e[0m"
     end
-    #def red(str); colorize(31, str); end
-    #def green(str); colorize(32, str); end
-    #def yellow(str); colorize(33, str); end
-
     def notice(str)
       puts colorize(32, str)
     end
