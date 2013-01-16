@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-
-require 'optparse'
 require "#{File.dirname(__FILE__)}/../lib/infect"
 
-Infect.run
+Infect::Runner.call(*ARGV)

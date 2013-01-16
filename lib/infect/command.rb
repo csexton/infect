@@ -15,7 +15,11 @@ module Infect
     protected
 
     def mkdir(path)
-      FileUtils.mkdir_p(File.expand_path(path))
+      expanded_path = File.expand_path(path)
+      unless File.directory?(expanded_path)
+        notice "Making dir #{path}"
+        FileUtils.mkdir_p(expanded_path)
+      end
     end
     def chdir(path)
       Dir.chdir(path)
