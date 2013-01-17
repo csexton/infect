@@ -4,9 +4,11 @@ require 'rspec/core/rake_task'
 RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
 
-desc "Compile infect into a single file"
-task :compile do
+file "./standalone/infect" => FileList.new("lib/infect.rb", "lib/infect/*.rb") do |task|
   $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
   require 'infect/standalone'
-  Infect::Standalone.save("infect")
+  Infect::Standalone.save("./standalone/infect")
 end
+
+desc "Build standalone script"
+task :standalone => "./standalone/infect"
