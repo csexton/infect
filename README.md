@@ -1,4 +1,4 @@
-<h1 style="font: normal normal 80px/90px LeagueGothic,'Helvetica Neue',Helvetica,sans-serif;color:#dedede;padding:0;margin:32px 0 0 0;text-shadow:0 2px 3px rgba(40,41,42,0.6),0 4px 0 rgba(150,150,150,0.5),0 9px 5px rgba(0,0,0,0.5);"> <span font-size:100px;">&#9763;</span> Infect</h1>
+# &#9763; Infect
 
 Asset Pipeline Bundler for Vim and Pathogen
 
