@@ -3,6 +3,8 @@ require 'fileutils'
 
 module Infect
   class Command
+    include Infect::Colorize
+
     def self.build(command, args)
       case command.to_sym
       when :bundle
@@ -32,16 +34,5 @@ module Infect
         end
       end
     end
-
-    def colorize(code, str)
-      "\e[#{code}m#{str}\e[0m"
-    end
-    def notice(str)
-      puts colorize(32, str)
-    end
-    def error(str)
-      puts colorize(31, str)
-    end
-
   end
 end

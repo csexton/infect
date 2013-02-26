@@ -14,8 +14,8 @@ module Infect
 
       def install
         notice "Installing #{name}... "
-        mkdir "~/.vim/bundle"
-        chdir "#{VIMHOME}/bundle"
+        mkdir BUNDLE_DIR
+        chdir BUNDLE_DIR
         git "clone '#{url}'"
       end
 

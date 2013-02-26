@@ -14,7 +14,27 @@ require 'open-uri'
 require 'fileutils'
 
 module Infect
+  module Colorize
+    def colorize(code, str)
+      "\e[#{code}m#{str}\e[0m"
+    end
+    def notice(str)
+      puts colorize(32, str)
+    end
+    def error(str)
+      puts colorize(31, str)
+    end
+  end
+end
+
+
+require 'open-uri'
+require 'fileutils'
+
+module Infect
   class Command
+    include Infect::Colorize
+
     def self.build(command, args)
       case command.to_sym
       when :bundle
@@ -44,17 +64,6 @@ module Infect
         end
       end
     end
-
-    def colorize(code, str)
-      "\e[#{code}m#{str}\e[0m"
-    end
-    def notice(str)
-      puts colorize(32, str)
-    end
-    def error(str)
-      puts colorize(31, str)
-    end
-
   end
 end
 
@@ -74,8 +83,8 @@ module Infect
 
       def install
         notice "Installing #{name}... "
-        mkdir "~/.vim/bundle"
-        chdir "#{VIMHOME}/bundle"
+        mkdir BUNDLE_DIR
+        chdir BUNDLE_DIR
         git "clone '#{url}'"
       end
 
@@ -116,11 +125,72 @@ module Infect
 end
 
 module Infect
+  class Cleanup
+    include Infect::Colorize
+    attr_reader :commands, :force
+
+    def initialize(commands, args = {})
+      @commands = commands
+      @force = args[:force] || false
+    end
+
+    def call
+      uninstall_unless_included names
+    end
+
+    private
+
+    def uninstall_unless_included(list)
+      Dir["#{BUNDLE_DIR}/*"].each do |path|
+        unless list.include? File.basename(path)
+          if confirm(path)
+            notice "Deleting #{path}"
+            require 'fileutils'
+            FileUtils.rm_rf path
+          else
+            notice "Leaving #{path}"
+          end
+        end
+      end
+    end
+
+    def confirm(name)
+      unless force
+        print "Remove #{name}? [Yn]: "
+        response = STDIN.gets.chomp
+        case response.downcase
+        when ''
+          true
+        when 'y'
+          true
+        else
+          false
+        end
+      end
+    end
+
+    def names
+      list = []
+      commands.each do |command|
+        if command.respond_to? :name
+          list << command.name
+        end
+      end
+      list
+    end
+
+  end
+end
+
+module Infect
   VIMHOME = ENV['VIM'] || "#{ENV['HOME']}/.vim"
   VIMRC = ENV['MYVIMRC'] || "#{ENV['HOME']}/.vimrc"
+  BUNDLE_DIR = "#{VIMHOME}/bundle"
 
   class Runner
     def self.call(*args)
+      force = args.include? "-f"
+
       commands = [Command::Prereqs.new()]
 
       File.open( VIMRC ).each do |line|
@@ -130,9 +200,9 @@ module Infect
         end
       end
 
-      commands.compact.each do |command|
-        command.call
-      end
+
+      Cleanup.new(commands, :force => force).call
+
     end
   end
 end
