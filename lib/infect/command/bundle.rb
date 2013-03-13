@@ -5,7 +5,7 @@ module Infect
       def initialize(args)
         @bundle = args[0]
         @name = File.basename(bundle)
-        @location = File.expand_path("~/.vim/bundle/#{name}")
+        @location = File.expand_path("#{BUNDLE_DIR}/#{name}")
       end
 
       def url

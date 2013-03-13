@@ -23,6 +23,7 @@ module Infect
         FileUtils.mkdir_p(expanded_path)
       end
     end
+
     def chdir(path)
       Dir.chdir(path)
     end

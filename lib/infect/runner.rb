@@ -17,9 +17,9 @@ module Infect
         end
       end
 
-      #commands.compact.each do |command|
-      #  command.call
-      #end
+      commands.compact.each do |command|
+        command.call
+      end
 
       Cleanup.new(commands, :force => force).call
 
