@@ -53,6 +53,7 @@ module Infect
         FileUtils.mkdir_p(expanded_path)
       end
     end
+
     def chdir(path)
       Dir.chdir(path)
     end
@@ -74,7 +75,7 @@ module Infect
       def initialize(args)
         @bundle = args[0]
         @name = File.basename(bundle)
-        @location = File.expand_path("~/.vim/bundle/#{name}")
+        @location = File.expand_path("#{BUNDLE_DIR}/#{name}")
       end
 
       def url
@@ -115,10 +116,16 @@ module Infect
   class Command
     class Prereqs < Command
       def call
-        mkdir "~/.vim/bundle"
-        mkdir "~/.cache/swap"
-        mkdir "~/.cache/backup"
-        mkdir "~/.cache/undo"
+        mkdir_p "~/.vim/bundle"
+        if RUBY_PLATFORM =~ /darwin/
+          mkdir_p "~/Library/Vim/swap"
+          mkdir_p "~/Library/Vim/backup"
+          mkdir_p "~/Library/Vim/undo"
+        else
+          mkdir_p "~/.local/share/vim/swap"
+          mkdir_p "~/.local/share/vim/backup"
+          mkdir_p "~/.local/share/vim/undo"
+        end
       end
     end
   end
@@ -200,6 +207,9 @@ module Infect
         end
       end
 
+      commands.compact.each do |command|
+        command.call
+      end
 
       Cleanup.new(commands, :force => force).call
 
