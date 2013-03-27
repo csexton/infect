@@ -1,8 +1,8 @@
 # &#9763; Infect
 
-Bundle manager for [pathogen](https://github.com/tpope/vim-pathogen).
+Bundle manager for [Pathogen](https://github.com/tpope/vim-pathogen).
 
-Manage your entire vim config with a single '.vimrc' file. Much the same way that [sprockets](https://github.com/sstephenson/sprockets) lets you include web assets, infect will handle install vim plugins for you.
+Manage your entire vim config with a single `.vimrc` file. Much the same way that [sprockets](https://github.com/sstephenson/sprockets) lets you include web assets, infect will handle install vim plugins for you.
 
 ## Installation
 
