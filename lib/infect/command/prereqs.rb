@@ -1,18 +1,20 @@
+require 'fileutils'
 module Infect
   class Command
     class Prereqs < Command
+      def mkdirs(list)
+        list.each do |path|
+          FileUtils.mkdir_p path
+        end
+      end
       def call
-        mkdir_p "~/.vim/bundle"
+        mkdir "~/.vim/bundle"
         # create the cache directories for sensible.vim:
         # TODO: Support Windows
         if RUBY_PLATFORM =~ /darwin/
-          mkdir_p "~/Library/Vim/swap"
-          mkdir_p "~/Library/Vim/backup"
-          mkdir_p "~/Library/Vim/undo"
+          mkdirs %w(~/Library/Vim/swap ~/Library/Vim/backup ~/Library/Vim/undo)
         else
-          mkdir_p "~/.local/share/vim/swap"
-          mkdir_p "~/.local/share/vim/backup"
-          mkdir_p "~/.local/share/vim/undo"
+          mkdirs %w(~/.local/share/vim/swap ~/.local/share/vim/backup ~/.local/share/vim/undo")
         end
       end
     end
