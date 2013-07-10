@@ -1,7 +1,4 @@
 require "./lib/infect"
 
-describe Infect::Standalone do
-debugger
-binding.pry
-
+describe 'Infect::Standalone' do
 end

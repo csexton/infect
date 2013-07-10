@@ -2,8 +2,9 @@ module Infect
   class Command
     class Bundle < Command
       attr_reader :bundle, :name, :location
-      def initialize(args)
-        @bundle = args[0]
+      def initialize(arg, opts)
+        @bundle = arg
+        @options = opts
         @name = File.basename(bundle)
         @location = File.expand_path("#{BUNDLE_DIR}/#{name}")
       end

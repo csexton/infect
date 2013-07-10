@@ -5,10 +5,10 @@ module Infect
   class Command
     include Infect::Colorize
 
-    def self.build(command, args)
+    def self.build(command, arg ,opts)
       case command.to_sym
       when :bundle
-        Bundle.new(args)
+        Bundle.new(arg, opts)
       else
         $stderr.puts "WARNING: #{command} is not a valid command, ignorning"
       end
