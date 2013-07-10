@@ -7,7 +7,7 @@
 #
 
 module Infect
-  VERSION = "0.0.3"
+  VERSION = "0.0.4"
 end
 
 require 'open-uri'
@@ -35,10 +35,10 @@ module Infect
   class Command
     include Infect::Colorize
 
-    def self.build(command, args)
+    def self.build(command, arg ,opts)
       case command.to_sym
       when :bundle
-        Bundle.new(args)
+        Bundle.new(arg, opts)
       else
         $stderr.puts "WARNING: #{command} is not a valid command, ignorning"
       end
@@ -72,8 +72,9 @@ module Infect
   class Command
     class Bundle < Command
       attr_reader :bundle, :name, :location
-      def initialize(args)
-        @bundle = args[0]
+      def initialize(arg, opts)
+        @bundle = arg
+        @options = opts
         @name = File.basename(bundle)
         @location = File.expand_path("#{BUNDLE_DIR}/#{name}")
       end
@@ -112,19 +113,21 @@ module Infect
   end
 end
 
+require 'fileutils'
 module Infect
   class Command
     class Prereqs < Command
+      def mkdirs(list)
+        list.each do |path|
+          FileUtils.mkdir_p path
+        end
+      end
       def call
-        mkdir_p "~/.vim/bundle"
+        mkdir "~/.vim/bundle"
         if RUBY_PLATFORM =~ /darwin/
-          mkdir_p "~/Library/Vim/swap"
-          mkdir_p "~/Library/Vim/backup"
-          mkdir_p "~/Library/Vim/undo"
+          mkdirs %w(~/Library/Vim/swap ~/Library/Vim/backup ~/Library/Vim/undo)
         else
-          mkdir_p "~/.local/share/vim/swap"
-          mkdir_p "~/.local/share/vim/backup"
-          mkdir_p "~/.local/share/vim/undo"
+          mkdirs %w(~/.local/share/vim/swap ~/.local/share/vim/backup ~/.local/share/vim/undo")
         end
       end
     end
@@ -200,10 +203,10 @@ module Infect
 
       commands = [Command::Prereqs.new()]
 
-      File.open( VIMRC ).each do |line|
+      File.open( VIMRC ).each_line do |line|
         if line =~ /^"=/
-          command, *args = line.split
-          commands << Command.build(command.gsub('"=', ''), args)
+          command, arg, opts = parse_command(line.gsub('"=', ''))
+          commands << Command.build(command, arg, opts)
         end
       end
 
@@ -213,6 +216,27 @@ module Infect
 
       Cleanup.new(commands, :force => force).call
 
+    end
+
+    private
+
+    def self.parse_command(line)
+
+
+
+      command, arg, opts_string = line.split ' ', 3
+      [command, arg, parse_opts(opts_string)]
+    end
+
+    def self.parse_opts(string)
+      hash = {}
+      parts = string.split(/[\s:](?=(?:[^"]|"[^"]*")*$)/).reject! { |c| c.empty? }
+      if parts
+        parts.each_slice(2) do |key, val|
+          hash[key.to_sym] = val
+        end
+      end
+      hash
     end
   end
 end
