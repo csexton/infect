@@ -4,7 +4,7 @@ module Infect
     class Prereqs < Command
       def mkdirs(list)
         list.each do |path|
-          FileUtils.mkdir_p path
+          FileUtils.mkdir_p(File.expand_path(path))
         end
       end
       def call
