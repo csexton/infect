@@ -1,3 +1,4 @@
+require 'pmap'
 module Infect
   # Globals be global
   VIMHOME = ENV['VIM'] || "#{ENV['HOME']}/.vim"
@@ -17,9 +18,7 @@ module Infect
         end
       end
 
-      commands.compact.each do |command|
-        command.call
-      end
+      commands.compact.peach(&:call)
 
       Cleanup.new(commands, :force => force).call
 
