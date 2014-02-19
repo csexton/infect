@@ -19,20 +19,36 @@ namespace :build do
     pmap = Gem::Specification.find_by_name('pmap')
     pmap_lib = Dir["#{File.join(pmap.lib_dirs_glob, 'pmap.rb')}"].first
     content = File.read(pmap_lib)
+
+    preamble = <<PREAMBLE
+
+#####
+# This file is generated code. DO NOT send patches for it.
+#
+# Original source files with comments are at:
+# https://github.com/csexton/infect
+#####
+
+PREAMBLE
     license = File.read("#{File.join(pmap.lib_dirs_glob, '..', 'LICENSE')}")
-    File.open('standalone/infect', 'a') do |f|
-      appending_content = [
-        "\n\n",
-        "=begin",
-        "Content below belongs to the #{pmap.name} gem",
-        "License",
-        license,
-        "=end",
-        "require 'pmap'",
-        content,
-      ].join("\n")
-      f << appending_content
-    end
+    infect = File.read('standalone/infect')
+                 .gsub(%r{#!/usr/bin/.* ruby$}, '')
+                 .gsub(%r{#!/usr/bin/ruby$}, '')
+                 .gsub(%r{require 'pmap'}, '')
+    output = [ "#!/usr/bin/env ruby",
+                     preamble,
+                     "=begin",
+                     "Content related to pmap belongs to the #{pmap.name} gem",
+                     "See source at https://github.com/bruceadams/pmap",
+                     "License",
+                     license,
+                     "=end",
+                     content,
+                     "# End of PMap gem",
+                     infect,
+                   ].join("\n")
+
+    File.write(File.expand_path('standalone/infect'), output)
   end
 end
 
