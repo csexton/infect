@@ -8,7 +8,7 @@ Manage your entire vim config with a single `.vimrc` file. Much the same way tha
 
 Infect has no dependencies other than a recentish version of ruby. And can be installed as a standalone script, perhaps in your `~/bin` directory.
 
-    $ curl https://raw.github.com/csexton/infect/master/standalone/infect > ~/bin/infect && chmod +x ~/bin/infect
+    $ curl https://raw.githubusercontent.com/csexton/infect/master/standalone/infect > ~/bin/infect && chmod +x ~/bin/infect
 
 Or if you prefer to manage it at a gem:
 
