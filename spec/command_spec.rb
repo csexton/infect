@@ -6,6 +6,6 @@ describe Infect::Command do
   end
 
   it "build a bundle command" do
-    Infect::Command.build("bundle", "tpope/vim-pathogen", {}).name.should == "vim-pathogen"
+    Infect::Command.build("bundle", "tpope/vim-fugitive", {}).name.should == "vim-fugitive"
   end
 end

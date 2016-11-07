@@ -1,32 +1,38 @@
-require 'pmap'
 module Infect
   # Globals be global
   VIMHOME = ENV['VIM'] || "#{ENV['HOME']}/.vim"
   VIMRC = ENV['MYVIMRC'] || "#{ENV['HOME']}/.vimrc"
-  BUNDLE_DIR = "#{VIMHOME}/bundle"
+  PACK_DIR = "#{VIMHOME}/pack/"
 
   class Runner
     def self.call(*args)
+      self.new.call(args)
+    end
+
+    def call(*args)
       force = args.include? "-f"
 
-      commands = [Command::Prereqs.new()]
+      Command::Prereqs.new().call
 
-      File.open( VIMRC ).each_line do |line|
-        if line =~ /^"=/
-          command, arg, opts = parse_command(line.gsub('"=', ''))
-          commands << Command.build(command, arg, opts)
-        end
-      end
+      commands = get_packages_from_vimrc
+      commands.compact.each(&:call)
 
-      commands.compact.peach(&:call)
-
-      Cleanup.new(commands, :force => force).call
-
+      locations = commands.map(&:location)
+      Cleanup.new(locations, :force => force).call
     end
 
     private
 
-    def self.parse_command(line)
+    def get_packages_from_vimrc
+      File.readlines(VIMRC).map do |line|
+        if line =~ /^"=/
+          command, arg, opts = parse_command(line.gsub('"=', ''))
+          Command.build(command, arg, opts)
+        end
+      end.compact
+    end
+
+    def parse_command(line)
       # TODO: pass in named params after for things like build commands and
       # branches
       #
@@ -36,7 +42,7 @@ module Infect
       # Now we can take args and split by ',' the split those by ':' and
       # map that to a hash that we can pass into the command builder
 
-      # This splits adn perserves "quoted words"
+      # This splits and perserves "quoted words"
       #command, *args = line.split /\s(?=(?:[^"]|"[^"]*")*$)/
 
       #command, *args = line.split
@@ -45,7 +51,7 @@ module Infect
       [command, arg, parse_opts(opts_string)]
     end
 
-    def self.parse_opts(string)
+    def parse_opts(string)
       hash = {}
       # Woah now.
       #

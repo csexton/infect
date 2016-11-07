@@ -6,7 +6,7 @@ require 'tmpdir'
 describe Infect::Runner do
   before do
     stub_const "Infect::VIMRC", file
-    stub_const "Infect::BUNDLE_DIR", dir
+    stub_const "Infect::PACK_DIR", dir
   end
 
   let(:file) { Tempfile.new("rspec") }

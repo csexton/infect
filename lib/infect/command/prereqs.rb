@@ -8,7 +8,7 @@ module Infect
         end
       end
       def call
-        mkdir "~/.vim/bundle"
+        mkdir PACK_DIR
         # create the cache directories for sensible.vim:
         # TODO: Support Windows
         if RUBY_PLATFORM =~ /darwin/
