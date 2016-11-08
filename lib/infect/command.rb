@@ -7,8 +7,10 @@ module Infect
 
     def self.build(command, arg ,opts)
       case command.to_sym
-      when :bundle
-        Bundle.new(arg, opts)
+      when :plugin
+        Plugin.new(arg, opts)
+      when :bundle, :package
+        Package.new(arg, opts)
       else
         $stderr.puts "WARNING: #{command} is not a valid command, ignorning"
       end
@@ -19,7 +21,6 @@ module Infect
     def mkdir(path)
       expanded_path = File.expand_path(path)
       unless File.directory?(expanded_path)
-        notice "Making dir #{path}"
         FileUtils.mkdir_p(expanded_path)
       end
     end

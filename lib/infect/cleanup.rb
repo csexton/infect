@@ -1,22 +1,16 @@
 module Infect
   class Cleanup
     include Infect::Colorize
-    attr_reader :commands, :force
+    attr_reader :names, :force
 
-    def initialize(commands, args = {})
-      @commands = commands
+    def initialize(list, args)
+      @names = list.map{|p| File.basename(p)}
       @force = args[:force] || false
     end
 
     def call
-      uninstall_unless_included names
-    end
-
-    private
-
-    def uninstall_unless_included(list)
-      Dir["#{BUNDLE_DIR}/*"].each do |path|
-        unless list.include? File.basename(path)
+      Dir["#{PACK_DIR}*/*/*"].each do |path|
+        unless names.include? File.basename(path)
           if confirm(path)
             notice "Deleting #{path}"
             require 'fileutils'
@@ -41,16 +35,6 @@ module Infect
           false
         end
       end
-    end
-
-    def names
-      list = []
-      commands.each do |command|
-        if command.respond_to? :name
-          list << command.name
-        end
-      end
-      list
     end
 
   end

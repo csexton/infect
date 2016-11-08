@@ -1,99 +1,4 @@
-#!/usr/bin/env ruby
-
-#####
-# This file is generated code. DO NOT send patches for it.
-#
-# Original source files with comments are at:
-# https://github.com/csexton/infect
-#####
-
-
-=begin
-Content related to pmap belongs to the pmap gem
-See source at https://github.com/bruceadams/pmap
-License
-Copyright 2011 Bruce Adams
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-=end
-require 'thread' unless defined?(Mutex)
-
-# Global variable for the default thread pool size.
-$pmap_default_thread_count ||= 64
-
-module PMap
-  class DummyOutput
-    def []=(idx, val)
-    end
-  end
-
-  def self.included(base)
-    base.class_eval do
-      # Parallel "map" for any Enumerable.
-      # Requires a block of code to run for each Enumerable item.
-      # [thread_count] is number of threads to create. Optional.
-      def pmap(thread_count=nil, &proc)
-        in_array = self.to_a        # I'm not sure how expensive this is...
-        out_array = Array.new(in_array.size)
-        process_core(thread_count, in_array, out_array, &proc)
-        out_array
-      end
-
-      def process_core(thread_count, in_array, out_array, &proc)
-        thread_count = thread_count(thread_count, in_array)
-        size = in_array.size
-
-        semaphore = Mutex.new
-        index = -1                  # Our use of index is protected by semaphore
-
-        threads = (0...thread_count).map {
-          Thread.new {
-            i = nil
-            while (semaphore.synchronize {i = (index += 1)}; i < size)
-              out_array[i] = yield(in_array[i])
-            end
-          }
-        }
-        threads.each {|t| t.join}
-      end
-      private :process_core
-
-      def thread_count(user_requested_count, items)
-        user_requested_count ||= $pmap_default_thread_count
-        raise ArgumentError, "thread_count must be at least one." unless
-          user_requested_count.respond_to?(:>=) && user_requested_count >= 1
-        [user_requested_count, items.size].min
-      end
-      private :thread_count
-
-      # Parallel "each" for any Enumerable.
-      # Requires a block of code to run for each Enumerable item.
-      # [thread_count] is number of threads to create. Optional.
-      def peach(thread_count=nil, &proc)
-        process_core(thread_count, self.to_a, DummyOutput.new, &proc)
-        self
-      end
-    end
-  end
-end
-
-module Enumerable
-  include PMap
-end
-
-# End of PMap gem
-
+#!/usr/bin/ruby
 #
 # This file is generated code. DO NOT send patches for it.
 #
@@ -102,7 +7,7 @@ end
 #
 
 module Infect
-  VERSION = "0.0.5"
+  VERSION = "1.0.0"
 end
 
 require 'open-uri'
@@ -132,8 +37,10 @@ module Infect
 
     def self.build(command, arg ,opts)
       case command.to_sym
-      when :bundle
-        Bundle.new(arg, opts)
+      when :plugin
+        Plugin.new(arg, opts)
+      when :bundle, :package
+        Package.new(arg, opts)
       else
         $stderr.puts "WARNING: #{command} is not a valid command, ignorning"
       end
@@ -144,7 +51,6 @@ module Infect
     def mkdir(path)
       expanded_path = File.expand_path(path)
       unless File.directory?(expanded_path)
-        notice "Making dir #{path}"
         FileUtils.mkdir_p(expanded_path)
       end
     end
@@ -163,46 +69,78 @@ module Infect
   end
 end
 
+require 'open3'
+
 module Infect
   class Command
-    class Bundle < Command
-      attr_reader :bundle, :name, :location
-      def initialize(arg, opts)
-        @bundle = arg
-        @options = opts
-        @name = File.basename(bundle)
-        @location = File.expand_path("#{BUNDLE_DIR}/#{name}")
-      end
+    class Plugin < Command
+      attr_reader :build, :location, :name, :options, :url
 
-      def url
-        "git@github.com:#{bundle}.git"
+      def initialize(arg, opts)
+        load = opts.fetch(:load) { "start" }
+        package = opts.fetch(:package) { "default" }
+
+        @name = File.basename(arg)
+        @url = "git@github.com:#{arg}.git"
+        @location = File.expand_path("#{PACK_DIR}/#{package}/#{load}/#{name}")
+        @build = opts[:build]
       end
 
       def install
-        notice "Installing #{name}... "
-        mkdir BUNDLE_DIR
-        chdir BUNDLE_DIR
-        git "clone '#{url}'"
+        notice "Installing #{name} to #{@location}..."
+        parent_dir = File.expand_path("..", location)
+        mkdir parent_dir
+        chdir parent_dir
+        git "clone --depth 1 '#{url}'"
       end
 
       def update
-        notice "Updating #{name}... "
-        chdir @location
-        git "pull"
+        notice "Updating #{name}..."
+        chdir location
+        git "fetch"
+        git "checkout master"
       end
 
       def call
-        if File.exists? @location
+        if File.exists? location
           update
         else
           install
         end
+
+        if build
+          notice "  Found build command, running: '#{build}'"
+          chdir location
+          quiet_system "#{build.gsub(/^\"|\"?$/, '')}"
+        end
+
+        location
       end
 
       private
 
       def git(args)
-        `git #{args}`
+        quiet_system "git #{args}"
+      end
+
+      def quiet_system(cmd)
+        output = %x{#{cmd} 2>&1}
+        unless $?.success?
+          error "Command failed: #{cmd}\n"
+          error output.gsub(/^/, "  ")
+        end
+
+      end
+    end
+  end
+end
+
+module Infect
+  class Command
+    class Package < Plugin
+      def initialize(arg, opts)
+        super
+        @location = File.expand_path("#{PACK_DIR}/#{name}")
       end
     end
   end
@@ -218,7 +156,7 @@ module Infect
         end
       end
       def call
-        mkdir "~/.vim/bundle"
+        mkdir PACK_DIR
         if RUBY_PLATFORM =~ /darwin/
           mkdirs %w(~/Library/Vim/swap ~/Library/Vim/backup ~/Library/Vim/undo)
         else
@@ -232,22 +170,16 @@ end
 module Infect
   class Cleanup
     include Infect::Colorize
-    attr_reader :commands, :force
+    attr_reader :names, :force
 
-    def initialize(commands, args = {})
-      @commands = commands
+    def initialize(list, args)
+      @names = list.map{|p| File.basename(p)}
       @force = args[:force] || false
     end
 
     def call
-      uninstall_unless_included names
-    end
-
-    private
-
-    def uninstall_unless_included(list)
-      Dir["#{BUNDLE_DIR}/*"].each do |path|
-        unless list.include? File.basename(path)
+      Dir["#{PACK_DIR}*/*/*"].each do |path|
+        unless names.include? File.basename(path)
           if confirm(path)
             notice "Deleting #{path}"
             require 'fileutils'
@@ -274,47 +206,43 @@ module Infect
       end
     end
 
-    def names
-      list = []
-      commands.each do |command|
-        if command.respond_to? :name
-          list << command.name
-        end
-      end
-      list
-    end
-
   end
 end
-
 
 module Infect
   VIMHOME = ENV['VIM'] || "#{ENV['HOME']}/.vim"
   VIMRC = ENV['MYVIMRC'] || "#{ENV['HOME']}/.vimrc"
-  BUNDLE_DIR = "#{VIMHOME}/bundle"
+  PACK_DIR = "#{VIMHOME}/pack/"
 
   class Runner
     def self.call(*args)
+      self.new.call(args)
+    end
+
+    def call(*args)
       force = args.include? "-f"
 
-      commands = [Command::Prereqs.new()]
+      Command::Prereqs.new().call
 
-      File.open( VIMRC ).each_line do |line|
-        if line =~ /^"=/
-          command, arg, opts = parse_command(line.gsub('"=', ''))
-          commands << Command.build(command, arg, opts)
-        end
-      end
+      commands = get_packages_from_vimrc
+      commands.compact.each(&:call)
 
-      commands.compact.peach(&:call)
-
-      Cleanup.new(commands, :force => force).call
-
+      locations = commands.map(&:location)
+      Cleanup.new(locations, :force => force).call
     end
 
     private
 
-    def self.parse_command(line)
+    def get_packages_from_vimrc
+      File.readlines(VIMRC).map do |line|
+        if line =~ /^"=/
+          command, arg, opts = parse_command(line.gsub('"=', ''))
+          Command.build(command, arg, opts)
+        end
+      end.compact
+    end
+
+    def parse_command(line)
 
 
 
@@ -322,7 +250,7 @@ module Infect
       [command, arg, parse_opts(opts_string)]
     end
 
-    def self.parse_opts(string)
+    def parse_opts(string)
       hash = {}
       parts = string.split(/[\s:](?=(?:[^"]|"[^"]*")*$)/).reject! { |c| c.empty? }
       if parts
