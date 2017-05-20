@@ -7,7 +7,7 @@
 #
 
 module Infect
-  VERSION = "1.0.0"
+  VERSION = "1.1.0"
 end
 
 require 'open-uri'
@@ -74,11 +74,13 @@ require 'open3'
 module Infect
   class Command
     class Plugin < Command
+      DEFAULT_DIR = "plugins"
+
       attr_reader :build, :location, :name, :options, :url
 
       def initialize(arg, opts)
         load = opts.fetch(:load) { "start" }
-        package = opts.fetch(:package) { "default" }
+        package = opts.fetch(:package) { DEFAULT_DIR }
 
         @name = File.basename(arg)
         @url = "git@github.com:#{arg}.git"
@@ -178,7 +180,7 @@ module Infect
     end
 
     def call
-      Dir["#{PACK_DIR}*/*/*"].each do |path|
+      install_paths.each do |path|
         unless names.include? File.basename(path)
           if confirm(path)
             notice "Deleting #{path}"
@@ -204,6 +206,18 @@ module Infect
           false
         end
       end
+    end
+
+    private
+
+    def install_paths
+
+      default_dir = Command::Plugin::DEFAULT_DIR
+      plugins = Dir["#{PACK_DIR}#{default_dir}/*/*"]
+      packages = Dir["#{PACK_DIR}*"]
+      packages.delete("#{PACK_DIR}#{default_dir}")
+
+      plugins + packages
     end
 
   end
