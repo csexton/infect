@@ -3,11 +3,13 @@ require 'open3'
 module Infect
   class Command
     class Plugin < Command
+      DEFAULT_DIR = "plugins"
+
       attr_reader :build, :location, :name, :options, :url
 
       def initialize(arg, opts)
         load = opts.fetch(:load) { "start" }
-        package = opts.fetch(:package) { "default" }
+        package = opts.fetch(:package) { DEFAULT_DIR }
 
         @name = File.basename(arg)
         @url = "git@github.com:#{arg}.git"

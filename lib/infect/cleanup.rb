@@ -9,7 +9,7 @@ module Infect
     end
 
     def call
-      Dir["#{PACK_DIR}*/*/*"].each do |path|
+      install_paths.each do |path|
         unless names.include? File.basename(path)
           if confirm(path)
             notice "Deleting #{path}"
@@ -35,6 +35,21 @@ module Infect
           false
         end
       end
+    end
+
+    private
+
+    def install_paths
+      # Get the list of directories that plugins might be installed to, since
+      # we install legacy plugins in a special directory we want to look under
+      # that as well as in the top level `pack` directory.
+
+      default_dir = Command::Plugin::DEFAULT_DIR
+      plugins = Dir["#{PACK_DIR}#{default_dir}/*/*"]
+      packages = Dir["#{PACK_DIR}*"]
+      packages.delete("#{PACK_DIR}#{default_dir}")
+
+      plugins + packages
     end
 
   end
