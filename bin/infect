@@ -1,4 +1,21 @@
 #!/usr/bin/env ruby
 require "#{File.dirname(__FILE__)}/../lib/infect"
 
+unless (ARGV & %w[-v --version]).empty?
+  puts "infect version #{Infect::VERSION}"
+  exit 0
+end
+
+unless (ARGV & %w[-h --help]).empty?
+  puts "Command line tool for installing packages for Vim"
+  puts "Usage: infect [options]"
+  puts "Options:"
+  puts "    -f            Force removal of old packages without prompting"
+  puts "    -v/--version  Print the version"
+  puts "    -h/--help     Print this message"
+  puts ""
+  puts "See https://github.com/csexton/infect for instructions"
+  exit 0
+end
+
 Infect::Runner.call(*ARGV)
