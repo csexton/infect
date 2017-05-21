@@ -56,7 +56,7 @@ Some plugins have binaries that need to be compiled, and infect can automaticall
 
 Packages are collections of plugins. Introduced in Vim 8, they provide a way to combine a number of plugins together and have Vim load them for you. One of the nice upsides to this is you don't need any external plugin manager to be able to load plugin bundles, just have to put them in the right folder.
 
-Infect will do this for you. If you declare a 'plugin`, infect will put that in the `default` package's `start` directory. That will cause it to automatically be loaded when vim is started.
+Infect will do this for you. If you declare a `plugin`, infect will put that in the default package called `plugins`. That will cause it to automatically be loaded when vim is started.
 
 ## Loading automatically or optionally
 
@@ -66,9 +66,9 @@ According to Vim docs:
 ones under "pack/foo/start".  See |pack-add| below for how the "opt" directory
 is used.
 
-This means you have to call `:packadd` to load any optional plugins. This can be hanyd if you don't want to proactivly load up some plugins.
+This means you have to call `:packadd` to load any optional plugins. This can be handy if you don't want to proactively load up some plugins.
 
-Tell vim to only load trailertrash when requested:
+Tell vim to only load Trailer Trash when requested:
 
     "=plugin csexton/trailertrash.vim load: opt
 
