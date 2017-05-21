@@ -18,7 +18,7 @@ describe Infect::Runner do
 
     Infect::Command.stub(:builder)
     Infect::Command.should_receive(:build).with("bundle", "NoParams", {})
-    Infect::Runner.call
+    Infect::Runner.call("-f")
   end
 
   it "reads bundle command" do
@@ -27,7 +27,7 @@ describe Infect::Runner do
 
     Infect::Command.stub(:builder)
     Infect::Command.should_receive(:build).with("bundle", "ExtraParams", {param1:"val1", param2:"val2"})
-    Infect::Runner.call
+    Infect::Runner.call("-f")
   end
 
 

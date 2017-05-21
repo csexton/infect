@@ -6,7 +6,7 @@ module Infect
 
   class Runner
     def self.call(*args)
-      self.new.call(args)
+      self.new.call(*args)
     end
 
     def call(*args)
