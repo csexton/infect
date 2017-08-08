@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    infect (1.1.0)
+    infect (1.1.1)
 
 GEM
   remote: https://rubygems.org/
@@ -42,4 +42,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.13.6
+   1.15.3
