@@ -28,8 +28,7 @@ module Infect
       def update
         notice "Updating #{name}..."
         chdir location
-        git "fetch"
-        git "checkout master"
+        git "pull"
       end
 
       def call
